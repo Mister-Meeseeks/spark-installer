@@ -106,7 +106,7 @@ For example to start a standalone slave run
 
     bash$ spark-adm start-slave spark://127.0.0.1:7070
 
-### SPARK_HOME
+### Spark Home
 
 The SPARK_HOME directory itself is copied and stored at `/usr/local/src/spark`
 
