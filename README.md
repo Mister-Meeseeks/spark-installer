@@ -63,3 +63,58 @@ Then the following command
     sudo ./install-spark.sh
     
 Installs `/usr/local/src/spark-bin-2.4.0`
+
+## Install Targets
+
+### Binaries
+
+The top-level Spark binaries from `$SPARK_HOME/bin` are installed to `/usr/local/bin/`
+which is in the $PATH of all shells by default. Therefore after installation any shell
+can call a Spark bin as a native command. E.g.:
+
+    bash$ spark-submit
+
+### Jars
+
+Spark's JAR files are installed to `/usr/local/lib/spark`. That makes them available on
+any standard JDK or JRE $CLASSPATH by default.
+
+### R
+
+SparkR's libraries are installed to `/usr/local/R/site-library`. That means the SparkR
+library will be natively available to all R sessions. In any R terminal, simply call
+
+    > library(SparkR)
+    
+### pyspark
+
+The pyspark library is installed to `/usr/local/lib/python2.7/site-packages`. That means
+the pyspark package will be natively available to all python 2 interpreters by default.
+
+### System Binaries
+
+Spark's system binaries for managing a cluser are stored in `$SPARK_HOME/sbin/`. Because
+their names aren't scoped with anything identifying them as spark utilities directly
+placing them in the $PATH would be ambigious and confusing.
+
+The installer creates a utility in the `/usr/local/sbin/` directory (available by default
+on standard shell $PATH's). The utility is called spark-adm, and accepts as its first
+argument the name of the Spark sbin to run. (With or without the .sh extension) Any trailing 
+arguments are passed to the underlying Spark sbin.
+
+For example to start a standalone slave run
+
+    bash$ spark-adm start-slave spark://127.0.0.1:7070
+
+### Spark Home
+
+The SPARK_HOME directory itself is copied and stored at `/usr/local/src/spark`
+
+## Dependencies
+
+* bash
+* curl
+* wget
+* readlink (GNU style. Must support -f flag)
+* Linux style filesystem
+
