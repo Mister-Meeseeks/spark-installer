@@ -207,7 +207,11 @@ function pointSBinsToHome() {
 function wordRefBash() {
     local cmdDir=$1
     echo "#!/bin/bash -eu"
-    echo "$cmdDir/\$1.sh \$@"
+    echo "if [[ -e $cmdDir/\$1.sh ]] ; then "
+    echo "  $cmdDir/\$1.sh $@"
+    echo "else"
+    echo "  $cmdDir/\$1 $@"
+    echo "fi"
 }
 
 function linkJarsToHome() {
