@@ -5,7 +5,7 @@ Run once, then all Spark commands and libraries will be natively available will 
 natively available. Just like standard Linux packages. Never worry about fiddling
 with SPARK_HOME, CLASSPATH or PATH again.
 
-# Quickstart
+## Quickstart
 
 To run simply call the script with a directory, tar archive or URL of a valid Spark
 Home as the argument. E.g. to download from Apache and install
@@ -20,7 +20,7 @@ to bash:
     curl https://raw.githubusercontent.com/Mister-Meeseeks/spark-installer/master/install-spark.sh \
       | bash https://archive.apache.org/dist/spark/spark-2.4.0.tgz
       
-# Usage Patterns
+## Usage Patterns
  
 The install script also accepts directories and tar archives from the filesystem. If
 you have a custom or cached SPARK_HOME locally, it can be installed like
