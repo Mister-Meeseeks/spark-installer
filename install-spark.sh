@@ -50,7 +50,8 @@ function discoverSparkSrc() {
     else
 	local bestCand=$(listSparkSrcCands | sort -V | tail -n 1)
 	echo "Spark Installer Warning: Multiple Spark Home candidates in" \
-	     $srcSysDir "Using $bestCand" >&2
+	     $srcSysDir >&2
+	echo "Spark Installer: Using $bestCand..." >&2
 	echo $bestCand
     fi
 }
