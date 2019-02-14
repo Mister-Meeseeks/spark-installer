@@ -117,4 +117,4 @@ The SPARK_HOME directory itself is copied and stored at `/usr/local/src/spark`
 * wget
 * readlink (GNU style. Must support -f flag)
 * Linux style filesystem
-* 
+
