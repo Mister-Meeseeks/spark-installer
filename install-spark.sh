@@ -9,6 +9,7 @@ while getopts "l:b:s:j:R:S:" opt ; do
 	s) sbinSysDir=$OPTARG;;
 	j) jarsSysDir=$OPTARG;;
 	R) rLibSysDir=$OPTARG;;
+	p) pythonSysDir=$OPTARG;;
 	S) srcSysDir=$OPTARG;;
     esac
 done
@@ -30,12 +31,15 @@ fi
 if [[ -z $rLibSysDir ]] ; then
     rLibSysDir=$sysDir/lib/R/site-library/
 fi
+if [[ -z $pythonSysDir ]] ; then
+    pythonSysDir=$sysDir/lib/python2.7/site-packages/
+fi
 if [[ -z $srcSysDir ]] ; then
     srcSysDir=$sysDir/src
 fi
 
-mkdir -p $binSysDir $sbinSysDir \
-      $jarsSysDir $rLibSysDir $srcSysDir
+mkdir -p $binSysDir $sbinSysDir $srcSysDir \
+      $jarsSysDir $rLibSysDir $pythonSysDir
 
 function discoverSparkSrc() {
     candCnt=$(listSparkSrcCands | wc -l)
@@ -172,7 +176,7 @@ function pointBinsToHome() {
     local sparkHome=$1
     for bin in $(importantSparkBins) ; do
 	binPath=$sparkHome/bin/$bin
-	dereferenceBash $sparkHome $binPath > $binSysDir/$bin
+	dereferenceBash $binPath > $binSysDir/$bin
 	chmod u+x $binSysDir/$bin
     done
 }
@@ -213,8 +217,14 @@ function linkJarsToHome() {
 
 function linkRLibsToHome() {
     local sparkHome=$1
-    [[ -L $rLibSysDir/SparkR ]] && unlink $rLibSysDir
+    [[ -L $rLibSysDir/SparkR ]] && unlink $rLibSysDir/SparkR
     ln -s $sparkHome/R/lib/SparkR/ $rLibSysDir/SparkR
+}
+
+function linkPyLibToHome() {
+    local sparkHome=$1
+    [[ -L $pythonSysDir/pyspark ]] && unlink $pythonSysDir/pyspark
+    ln -s $sparkHome/python/pyspark $pythonSysDir/pyspark
 }
 
 if [[ -z $installSrc ]] ; then
@@ -228,4 +238,4 @@ pointBinsToHome $sparkHome
 pointSBinsToHome $sparkHome
 linkJarsToHome $sparkHome
 linkRLibsToHome $sparkHome
-
+linkPyLibToHome $sparkHome
