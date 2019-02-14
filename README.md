@@ -63,3 +63,14 @@ Then the following command
     sudo ./install-spark.sh
     
 Installs `/usr/local/src/spark-bin-2.4.0`
+
+## Install Targets
+
+## Dependencies
+
+* bash
+* curl
+* wget
+* readlink (GNU style. Must support -f flag)
+* Linux style filesystem
+* 
