@@ -38,11 +38,11 @@ function discoverSparkSrc() {
     if [[ $candCnt -eq 1 ]] ; then
 	listSparkSrcCands
     elif [[ $candCnt -eq 0 ]] ; then
-	echo "Spark Installer Error: No install source argument and no Spark " \
+	echo "Spark Installer Error: No install source argument and no Spark" \
 	     "directory in $(srcSysDir)" >&2
 	exit 1
     else
-	echo "Spark Installer Error: No install source argument and multiple " \
+	echo "Spark Installer Error: No install source argument and multiple" \
 	     "Spark directories in $(srcSysDir)" >&2
 	listSparkSrcCands >&2
 	exit 1
@@ -65,7 +65,7 @@ function unpackHomeDir() {
     elif isUrl $installSrc ; then
 	unpackUrl $installSrc
     else 
-	echo "Spark Installer Error: Install source ($installSrc) not " \
+	echo "Spark Installer Error: Install source ($installSrc) not" \
 	     "present" >&2
 	exit 1
     fi
@@ -79,12 +79,19 @@ function isUrl() {
 function unpackUrl() {
     local installSrc=$1
     local installName=$(basename $installSrc)
+    local downloadPath=$srcSysDir/$installName
     mkdir -p $srcSysDir
     cd $srcSysDir
+
+    if [[ -e $downloadPath ]] ; then
+	echo "Spark Installer already has a local copy at $downloadPath" \
+	     "Skipping download........" >&2
+    else
+	wget $installSrc
+    fi
     
-    wget $installSrc
-    if [[ -e $srcSysDir/$installName ]] ; then
-	unpackArchiveHome $srcSysDir/$installName
+    if [[ -e $downloadPath ]] ; then
+	unpackArchiveHome $downloadPath
     else
 	echo "Spark Installer Error: Failed to download $installSrc" >&2
 	exit 1
@@ -113,9 +120,9 @@ function unpackArchiveHome() {
     if $(echo $installPath | egrep -q "[.](tar[.]gz|tgz)$") ; then
 	tar -xvzf $installPath | head -n 1
     elif $(echo $installPath | egrep -q "[.]tar$") ; then
-	tar -xf $installPath | head -n 1
+	tar -xvf $installPath | head -n 1
     else
-	echo "Spark Installer Error: Unrecognized file archive format: " \
+	echo "Spark Installer Error: Unrecognized file archive format:" \
 	     $installPath >&2
 	exit 1
     fi
@@ -126,7 +133,9 @@ if [[ -z $installSrc ]] ; then
 fi
 
 canonSparkHome=$(unpackHomeDir $installSrc)
-    
+
+echo $unpackHomeDir
+
 linkFlatSrcHome $canonSparkHome
 pointBinsToHome
 pointSBinsToHome
