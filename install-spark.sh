@@ -15,6 +15,7 @@ done
 shift $(($OPTIND - 1))
 installSrc=$1
 
+mkdir -p $sysDir
 sysDir=$(readlink -f $sysDir)
 
 if [[ -z $binSysDir ]] ; then
@@ -33,26 +34,37 @@ if [[ -z $srcSysDir ]] ; then
     srcSysDir=$sysDir/src
 fi
 
+mkdir -p $binSysDir $sbinSysDir \
+      $jarsSysDir $rLibSysDir $srcSysDir
+
 function discoverSparkSrc() {
     candCnt=$(listSparkSrcCands | wc -l)
-    if [[ $candCnt -eq 1 ]] ; then
+    if [[ $candCnt -eq 0 ]] ; then
+	canonApacheUrl
+    elif [[ $candCnt -eq 1 ]] ; then
 	listSparkSrcCands
-    elif [[ $candCnt -eq 0 ]] ; then
-	echo "Spark Installer Error: No install source argument and no Spark" \
-	     "directory in $(srcSysDir)" >&2
-	exit 1
     else
-	echo "Spark Installer Error: No install source argument and multiple" \
-	     "Spark directories in $(srcSysDir)" >&2
-	listSparkSrcCands >&2
-	exit 1
+	local bestCand=$(listSparkSrcCands | sort -V | tail -n 1)
+	echo "Spark Installer Warning: Multiple Spark Home candidates in" \
+	     $srcSysDir "Using $bestCand" >&2
+	echo $bestCand
     fi
+}
+
+function canonApacheUrl() {
+    version=$(checkLatestVersion)
+    echo https://archive.apache.org/dist/spark/spark-$version/spark-$version-bin-without-hadoop.tgz
+}
+
+function checkLatestVersion() {
+    curl https://spark.apache.org/downloads.html \
+	| grep "Latest Release" | sed 's+.*(Spark \([0-9.]*\).*+\1+'
 }
 
 function listSparkSrcCands() {
     shopt -s dotglob
     if [[ -d $srcSysDir ]] ; then
-	ls -d $srcSysDir/spark*/
+	ls -d $srcSysDir/*/ | grep -i spark
     fi
 }
 
@@ -92,6 +104,7 @@ function unpackUrl() {
     
     if [[ -e $downloadPath ]] ; then
 	unpackArchiveHome $downloadPath
+	rm $downloadPath
     else
 	echo "Spark Installer Error: Failed to download $installSrc" >&2
 	exit 1
@@ -116,16 +129,92 @@ function unpackArchiveHome() {
     installPath=$1
     mkdir -p $srcSysDir
     cd $srcSysDir
-    
+
     if $(echo $installPath | egrep -q "[.](tar[.]gz|tgz)$") ; then
-	tar -xvzf $installPath | head -n 1
+	local baseDir=$(tarDeclare -xvzf $installPath)
     elif $(echo $installPath | egrep -q "[.]tar$") ; then
-	tar -xvf $installPath | head -n 1
+	local baseDir=$(tarDeclare -xvf $installPath)
     else
 	echo "Spark Installer Error: Unrecognized file archive format:" \
 	     $installPath >&2
 	exit 1
     fi
+    echo $srcSysDir/$baseDir
+}
+
+# We want to output the name of the unpacked directory, but want tar
+# to fully unpack. So don't pipe directly to `head` or else tar will
+# close with a SIGPIPE before finishing. 
+function tarDeclare() {
+    tarFlags=$1
+    installPath=$2
+    tar $tarFlags $installPath | \
+	perl -ne 'BEGIN{ $onFirst = 1;} if ($onFirst) { print $_; $onFirst=0;}'
+}
+
+function linkFlatSrcHome() {
+    local sparkHome=$1
+    srcDir=$(dirname $sparkHome)
+    homeName=$(basename $sparkHome)
+    if [[ $srcDir != $srcSysDir ]] ; then
+	echo "Spark Intaller Internal Error: Unpacked SPARK_HOME not in" \
+	     "$srcSysDir: SPARK_HOME=$sparkHome" >&2
+	exit 1
+    elif [[ $homeName != spark ]] ; then
+	cd $srcSysDir
+	[[ -h spark ]] && unlink spark
+	ln -s $homeName spark
+    fi
+    echo $srcSysDir/spark
+}
+
+function pointBinsToHome() {
+    local sparkHome=$1
+    for bin in $(importantSparkBins) ; do
+	binPath=$sparkHome/bin/$bin
+	dereferenceBash $sparkHome $binPath > $binSysDir/$bin
+	chmod u+x $binSysDir/$bin
+    done
+}
+
+function importantSparkBins() {
+    echo beeline
+    echo pyspark
+    echo spark-class
+    echo sparkR
+    echo spark-shell
+    echo spark-sql
+    echo spark-submit
+}
+
+function dereferenceBash() {
+    local binPath=$1
+    echo "#!/bin/bash -eu"
+    echo $binPath \$@
+}
+
+function pointSBinsToHome() {
+    local sparkHome=$1
+    wordRefBash $sparkHome/sbin/ > $sbinSysDir/spark-adm
+    chmod u+x $sbinSysDir/spark-adm
+}
+
+function wordRefBash() {
+    local cmdDir=$1
+    echo "#!/bin/bash -eu"
+    echo "$cmdDir/\$1.sh \$@"
+}
+
+function linkJarsToHome() {
+    local sparkHome=$1
+    [[ -L $jarsSysDir/spark ]] && unlink $jarsSysDir/spark
+    ln -s $sparkHome/jars/ $jarsSysDir/spark
+}
+
+function linkRLibsToHome() {
+    local sparkHome=$1
+    [[ -L $rLibSysDir/SparkR ]] && unlink $rLibSysDir
+    ln -s $sparkHome/R/lib/SparkR/ $rLibSysDir/SparkR
 }
 
 if [[ -z $installSrc ]] ; then
@@ -133,12 +222,10 @@ if [[ -z $installSrc ]] ; then
 fi
 
 canonSparkHome=$(unpackHomeDir $installSrc)
+sparkHome=$(linkFlatSrcHome $canonSparkHome)
 
-echo $unpackHomeDir
-
-linkFlatSrcHome $canonSparkHome
-pointBinsToHome
-pointSBinsToHome
-linkJarsToHome
-linkRLibsToHome
+pointBinsToHome $sparkHome
+pointSBinsToHome $sparkHome
+linkJarsToHome $sparkHome
+linkRLibsToHome $sparkHome
 
