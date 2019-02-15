@@ -1,8 +1,8 @@
 # spark-installer
 Installs a pre-existing Spark home dir to the Linux system environment.
 
-Run once, then all Spark commands and libraries will be natively available will be
-natively available. Just like standard Linux packages. Never worry about fiddling
+Run once, then all Spark commands and libraries are natively available from standard
+environments. Just like run-in-the-mill package managers. Never worry about fiddling
 with SPARK_HOME, CLASSPATH or PATH again.
 
 ## Quickstart
