@@ -178,7 +178,7 @@ function pointBinsToHome() {
     for bin in $(importantSparkBins) ; do
 	binPath=$sparkHome/bin/$bin
 	dereferenceBash $binPath > $binSysDir/$bin
-	chmod u+x $binSysDir/$bin
+	chmod a+rx $binSysDir/$bin
     done
 }
 
@@ -201,7 +201,7 @@ function dereferenceBash() {
 function pointSBinsToHome() {
     local sparkHome=$1
     wordRefBash $sparkHome/sbin/ > $sbinSysDir/spark-adm
-    chmod u+x $sbinSysDir/spark-adm
+    chmod a+rx $sbinSysDir/spark-adm
 }
 
 function wordRefBash() {
