@@ -20,6 +20,14 @@ to bash:
     curl https://raw.githubusercontent.com/Mister-Meeseeks/spark-installer/master/install-spark.sh \
       | bash
       
+## Docker
+
+This installer makes it wonderfully simple to easily install Spark to a Docker image. Just 
+add the following layer to your Dockerfile:
+
+    RUN curl https://raw.githubusercontent.com/Mister-Meeseeks/spark-installer/master/install-spark.sh \
+      | bash 
+      
 ## Usage Patterns
 
 The install script accepts as a positional argument, any directory, tar archive or 
