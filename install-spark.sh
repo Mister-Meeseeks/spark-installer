@@ -214,10 +214,24 @@ function wordRefBash() {
     echo "fi"
 }
 
+function discoverJarsDir() {
+    local sparkHome=$1
+    if [[ -d $sparkHome/jars/ ]] ; then
+        echo $sparkHome/jars/
+    elif [[ -d $sparkHome/assembly/target/ ]] ; then
+        shopt -s nullglob
+        ls -d -v $sparkHome/assembly/target/scala*/jars/ | tail -n 1
+    else
+        echo "Warning: No JARs found in Spark Home. " \
+             "Linking to missing ./jars" >&2
+        echo $sparkHome/jars/
+    fi
+}
+
 function linkJarsToHome() {
     local sparkHome=$1
     [[ -L $jarsSysDir/spark ]] && unlink $jarsSysDir/spark
-    ln -s $sparkHome/jars/ $jarsSysDir/spark
+    ln -s $(discoverJarsDir $sparkHome) $jarsSysDir/spark
 }
 
 function linkRLibsToHome() {
